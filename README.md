@@ -16,6 +16,87 @@ Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) pour le détail des choix
 techniques et [`docs/NOTIFICATIONS.md`](docs/NOTIFICATIONS.md) pour le
 fonctionnement des notifications selon la plateforme.
 
+## 🆘 Aide : je ne sais pas où trouver une information
+
+Si un champ de configuration bloque, voici concrètement **où aller cliquer**
+pour chaque type d'information demandée plus bas.
+
+### Ce qu'il faut avoir sous la main avant de commencer
+
+1. **L'accès à votre instance n8n** (`auto.lielu.eu`) — c'est-à-dire pouvoir
+   vous connecter à son interface web avec un compte administrateur. Si vous
+   ne l'avez pas, c'est la personne qui a installé n8n (vous-même dans le
+   passé, ou un prestataire) qui a créé ce compte.
+2. **L'accès au serveur (VPS)** où tourne n8n — un terminal (SSH) ou le
+   panneau de contrôle de votre hébergeur (OVH, Hetzner, Scaleway...). C'est
+   là que le backend (`server/`) doit être lancé en permanence, à côté de
+   n8n. Sans cet accès, seule la partie "développement en local sur votre
+   ordinateur" (section Démarrage) est possible.
+3. **Un compte GitHub** avec accès à ce dépôt — pour déclencher/consulter les
+   builds d'APK (section APK Android) et modifier le code.
+
+Si vous n'avez **aucun** de ces trois accès, ce projet ne peut pas encore être
+mis en service : il faut d'abord les obtenir (ou identifier qui les détient)
+avant de continuer.
+
+### Où trouver l'URL de mon instance n8n (`N8N_BASE_URL`)
+
+C'est l'adresse que vous tapez dans un navigateur pour ouvrir n8n — ici
+`https://auto.lielu.eu`. Ajoutez `/api/v1` au bout pour obtenir la valeur du
+`.env` : `https://auto.lielu.eu/api/v1`.
+
+### Comment me connecter au serveur pour lancer les commandes (`npm run dev:server`, etc.)
+
+Ces commandes (section **Démarrage**) s'exécutent dans un terminal — soit sur
+votre ordinateur (pour tester en local), soit sur le VPS via SSH (pour le
+faire tourner en continu). Si "terminal" ou "SSH" ne vous parle pas, c'est un
+prérequis technique plus large que ce README ne couvre pas : voir par exemple
+le [guide DigitalOcean "How To Connect To Your Droplet with SSH"](https://www.digitalocean.com/community/tutorials/how-to-connect-to-your-droplet-with-ssh)
+(la logique est la même chez tous les hébergeurs), ou demandez à la personne
+qui gère le serveur de lancer `npm run build:server && npm start` (dans
+`server/`) pour vous, en tâche de fond (`pm2` ou service `systemd`).
+
+### Où récupérer la clé API n8n, étape par étape
+
+1. Ouvrez `https://auto.lielu.eu` et connectez-vous.
+2. Cliquez sur votre avatar/nom en bas à gauche → **Settings** (ou l'icône
+   d'engrenage selon la version).
+3. Menu **n8n API** dans la colonne de gauche des réglages.
+4. Bouton **Create an API key** → donnez-lui un nom (ex. "monNhuitNe") →
+   copiez la clé affichée **immédiatement** (elle ne sera plus jamais
+   visible en entier ensuite).
+5. Collez-la dans l'écran **Réglages** de l'app (champ "Clé API n8n").
+
+Capture d'écran officielle et détails : [documentation n8n — API keys](https://docs.n8n.io/api/authentication/).
+
+### Où récupérer l'APK une fois le build terminé
+
+Sur GitHub, dans ce dépôt : onglet **Releases** (colonne de droite de la page
+principale du dépôt, ou `https://github.com/<compte>/<dépôt>/releases`).
+Chaque release (`v1.0.x` pour `main`, `debug-<branche>` pour les autres)
+contient le fichier `.apk` à télécharger directement sur le téléphone Android
+(autoriser "Installer des applications inconnues" lors de la première
+installation). Alternative : onglet **Actions** → un run récent → section
+"Artifacts" en bas de page (nécessite d'être connecté à GitHub).
+
+### Glossaire des termes techniques utilisés dans ce README
+
+| Terme | Explication simple |
+|---|---|
+| **VPS** | Un serveur loué chez un hébergeur (OVH, Hetzner...), toujours allumé, où tournent n8n et le backend. |
+| **Reverse proxy** (Caddy/nginx) | Un logiciel installé sur le VPS qui reçoit toutes les requêtes web et les redirige vers le bon service (n8n, backend...) selon l'adresse demandée ; c'est aussi lui qui gère le HTTPS. |
+| **CORS** | Règle de sécurité des navigateurs qui bloque par défaut les appels d'un site web (la PWA) vers un autre domaine (le backend) — d'où `ALLOWED_ORIGIN`, la liste blanche. |
+| **PWA** | "Progressive Web App" : un site web qui peut s'installer sur le téléphone comme une vraie app. |
+| **VAPID** | Le système de clés qui permet au backend d'envoyer des notifications push sans dépendre de Google/Apple. |
+| **Keystore** | Le fichier contenant la clé cryptographique qui signe l'APK Android ; obligatoire pour publier sur le Play Store. |
+| **CI / CI-CD** | "Intégration continue" : les étapes automatiques (ici, le build de l'APK) qui s'exécutent sur les serveurs de GitHub à chaque `push`, sans rien faire sur votre machine. |
+| **`workflow_dispatch`** | Le bouton "Run workflow" qui permet de déclencher le build manuellement depuis l'onglet Actions de GitHub, sans faire de `push`. |
+| **Secret GitHub** | Une valeur sensible (mot de passe, clé) stockée de façon chiffrée dans les réglages du dépôt GitHub, utilisable par les workflows sans apparaître dans le code. |
+
+Si une information précise vous manque encore après avoir lu cette section,
+dites exactement à quelle étape vous êtes bloqué·e (quel écran, quel champ)
+et on complétera ce guide en conséquence.
+
 ## Configuration
 
 ### 1. Backend (`server/.env`)
