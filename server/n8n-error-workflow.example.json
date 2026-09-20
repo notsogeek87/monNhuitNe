@@ -1,0 +1,32 @@
+{
+  "name": "[Système] Notifier monNhuitNe en cas d'échec",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pwa-api.lielu.eu/hooks/n8n-error",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"workflow\": { \"id\": $json.workflow.id, \"name\": $json.workflow.name }, \"execution\": { \"id\": $json.execution.id, \"error\": { \"message\": $json.execution.error.message } } } }}"
+      },
+      "id": "notify-backend",
+      "name": "Notifier le backend PWA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [[{ "node": "Notifier le backend PWA", "type": "main", "index": 0 }]]
+    }
+  }
+}
