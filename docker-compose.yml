@@ -1,0 +1,15 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: monnhuitne-backend
+    restart: unless-stopped
+    env_file: server/.env
+    ports:
+      # Comme les autres services de ce VPS (n8n, joplin...) : lié à
+      # 127.0.0.1 uniquement, exposé publiquement via un vhost nginx qui
+      # termine le TLS et reverse-proxy vers ce port.
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - ./server/data:/app/server/data
