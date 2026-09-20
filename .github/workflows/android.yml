@@ -12,6 +12,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
     steps:
       - uses: actions/checkout@v5
 
@@ -26,9 +28,7 @@ jobs:
       # (app/build.gradle saute le plugin google-services si le fichier est
       # absent) — seules les notifications push ne fonctionneront pas.
       - name: Config Firebase (si le secret existe)
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
         run: echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
       # versionCode/versionName ne sont plus figés dans build.gradle : ce run
