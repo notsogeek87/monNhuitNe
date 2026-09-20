@@ -23,6 +23,7 @@
 
 {#if error}
 	<p class="error-text">{error}</p>
+	<p class="muted"><a href="/settings">Vérifier les réglages de connexion</a></p>
 {:else if summary}
 	<HealthSummary {summary} />
 {:else}

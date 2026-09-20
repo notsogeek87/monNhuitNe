@@ -1,3 +1,4 @@
+import { unreachableBackendMessage } from './client';
 import type { HealthSummary } from './types';
 
 /**
@@ -7,9 +8,14 @@ import type { HealthSummary } from './types';
  * réutilise le même calcul que le poller de fallback pour les notifications.
  */
 export async function getHealthSummary(backendBaseUrl: string, apiKey: string): Promise<HealthSummary> {
-	const res = await fetch(`${backendBaseUrl}/health/summary`, {
-		headers: { 'X-N8N-API-KEY': apiKey }
-	});
+	let res: Response;
+	try {
+		res = await fetch(`${backendBaseUrl}/health/summary`, {
+			headers: { 'X-N8N-API-KEY': apiKey }
+		});
+	} catch {
+		throw new Error(unreachableBackendMessage(backendBaseUrl));
+	}
 	if (!res.ok) throw new Error(`Impossible de charger la santé globale (${res.status})`);
 	return res.json();
 }

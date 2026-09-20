@@ -17,19 +17,33 @@ export class N8nApiError extends Error {
 	}
 }
 
+/** Message explicite à la place du générique "Failed to fetch" du navigateur quand la requête n'a pas pu partir. */
+export function unreachableBackendMessage(url: string): string {
+	return (
+		`Impossible de joindre ${url}. Vérifiez dans Réglages : l'URL est correcte ` +
+		`(pas de faute de frappe), le serveur backend est démarré et accessible depuis cet ` +
+		`appareil, et votre connexion internet fonctionne.`
+	);
+}
+
 export async function n8nRequest<T>(
 	config: N8nClientConfig,
 	path: string,
 	init: RequestInit = {}
 ): Promise<T> {
-	const res = await fetch(`${config.proxyBaseUrl}${path}`, {
-		...init,
-		headers: {
-			'Content-Type': 'application/json',
-			'X-N8N-API-KEY': config.apiKey,
-			...init.headers
-		}
-	});
+	let res: Response;
+	try {
+		res = await fetch(`${config.proxyBaseUrl}${path}`, {
+			...init,
+			headers: {
+				'Content-Type': 'application/json',
+				'X-N8N-API-KEY': config.apiKey,
+				...init.headers
+			}
+		});
+	} catch {
+		throw new Error(unreachableBackendMessage(config.proxyBaseUrl));
+	}
 
 	if (!res.ok) {
 		const body = await res.text().catch(() => '');

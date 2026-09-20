@@ -46,6 +46,7 @@
 	<p class="muted">Chargement…</p>
 {:else if $workflowsStore.error}
 	<p class="error-text">{$workflowsStore.error}</p>
+	<p class="muted"><a href="/settings">Vérifier les réglages de connexion</a></p>
 {:else}
 	{#each $workflowsStore.items as workflow}
 		<WorkflowCard {workflow} />
