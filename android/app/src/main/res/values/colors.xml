@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Même teinte de fond que la PWA (app/src/app.css, --bg) pour une identité visuelle cohérente. -->
+    <!-- Même teinte de fond que la PWA (variable "bg" dans app/src/app.css), pour une identité visuelle cohérente. -->
     <color name="colorBackground">#0B0E14</color>
 </resources>
