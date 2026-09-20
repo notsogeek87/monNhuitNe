@@ -102,18 +102,34 @@
 	<label>
 		<span class="muted">URL du backend (proxy + push)</span>
 		<input type="url" placeholder="https://pwa-api.lielu.eu" bind:value={backendBaseUrl} required />
+		<p class="hint">
+			L'adresse où tourne le backend (dossier <code>server/</code>), pas celle
+			de n8n. Si vous ne l'avez pas déployé vous-même, demandez cette adresse
+			à la personne qui gère le serveur.
+		</p>
 	</label>
 	<label>
 		<span class="muted">URL du proxy API n8n</span>
 		<input type="url" placeholder="https://pwa-api.lielu.eu/api/n8n" bind:value={n8nProxyBaseUrl} required />
+		<p class="hint">En général l'URL du backend ci-dessus, suivie de <code>/api/n8n</code>.</p>
 	</label>
 	<label>
 		<span class="muted">Clé API n8n</span>
 		<input type="password" autocomplete="off" bind:value={apiKey} required />
+		<p class="hint">
+			Dans n8n : votre avatar/nom (en bas à gauche) → <strong>Settings</strong>
+			→ <strong>n8n API</strong> → bouton <strong>Create an API key</strong>.
+			Copiez-la tout de suite, elle ne sera plus affichée en entier ensuite.
+		</p>
 	</label>
 	<label>
 		<span class="muted">PIN de déverrouillage (chiffre l'accès sur cet appareil)</span>
 		<input type="password" inputmode="numeric" bind:value={pin} required minlength="4" />
+		<p class="hint">
+			Un code que vous inventez vous-même (4 chiffres minimum), propre à cet
+			appareil. Il n'est enregistré nulle part : si vous l'oubliez, il n'y a
+			pas de récupération possible, il faut tout ressaisir depuis zéro.
+		</p>
 	</label>
 	<label>
 		<span class="muted">Confirmer le PIN</span>
@@ -177,6 +193,15 @@
 	}
 	.error-text {
 		color: var(--error);
+	}
+	.hint {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		margin: 2px 0 0;
+		line-height: 1.35;
+	}
+	.hint code {
+		font-size: 0.8rem;
 	}
 	.card + .card {
 		margin-top: 16px;
