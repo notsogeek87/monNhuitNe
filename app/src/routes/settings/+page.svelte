@@ -101,7 +101,7 @@
 	<h2>Connexion n8n</h2>
 	<label>
 		<span class="muted">URL du backend (proxy + push)</span>
-		<input type="url" placeholder="https://pwa-api.lielu.eu" bind:value={backendBaseUrl} required />
+		<input type="url" placeholder="https://pwa-api.example.com" bind:value={backendBaseUrl} required />
 		<p class="hint">
 			L'adresse où tourne le backend (dossier <code>server/</code>), pas celle
 			de n8n. Si vous ne l'avez pas déployé vous-même, demandez cette adresse
@@ -110,7 +110,7 @@
 	</label>
 	<label>
 		<span class="muted">URL du proxy API n8n</span>
-		<input type="url" placeholder="https://pwa-api.lielu.eu/api/n8n" bind:value={n8nProxyBaseUrl} required />
+		<input type="url" placeholder="https://pwa-api.example.com/api/n8n" bind:value={n8nProxyBaseUrl} required />
 		<p class="hint">En général l'URL du backend ci-dessus, suivie de <code>/api/n8n</code>.</p>
 	</label>
 	<label>

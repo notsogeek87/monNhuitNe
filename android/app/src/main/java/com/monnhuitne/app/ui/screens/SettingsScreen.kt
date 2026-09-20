@@ -57,7 +57,7 @@ fun SettingsScreen(
             value = baseUrl,
             onValueChange = { baseUrl = it },
             label = { Text("URL de l'API n8n") },
-            placeholder = { Text("https://auto.lielu.eu/api/v1") },
+            placeholder = { Text("https://n8n.example.com/api/v1") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth()
         )

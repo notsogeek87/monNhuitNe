@@ -60,7 +60,7 @@ app.route({
 	}
 });
 
-// --- Proxy des webhooks de production n8n (ex: https://auto.lielu.eu/webhook/<path>) ---
+// --- Proxy des webhooks de production n8n (ex: https://n8n.example.com/webhook/<path>) ---
 app.post<{ Params: { path: string } }>('/hooks/:path', async (req, reply) => {
 	const upstream = await fetch(`${config.n8nBaseUrl.replace('/api/v1', '')}/webhook/${req.params.path}`, {
 		method: 'POST',

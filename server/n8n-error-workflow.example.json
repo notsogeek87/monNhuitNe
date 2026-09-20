@@ -12,7 +12,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://pwa-api.lielu.eu/hooks/n8n-error",
+        "url": "https://pwa-api.example.com/hooks/n8n-error",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { \"workflow\": { \"id\": $json.workflow.id, \"name\": $json.workflow.name }, \"execution\": { \"id\": $json.execution.id, \"error\": { \"message\": $json.execution.error.message } } } }}"

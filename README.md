@@ -1,6 +1,6 @@
 # monNhuitNe
 
-Supervision et pilotage des workflows n8n (auto.lielu.eu) depuis mobile, sans
+Supervision et pilotage des workflows n8n (n8n.example.com) depuis mobile, sans
 passer par l'interface web n8n complète. Deux clients indépendants, à choisir
 selon la plateforme :
 
@@ -30,7 +30,7 @@ pour chaque type d'information demandée plus bas.
 
 ### Ce qu'il faut avoir sous la main avant de commencer
 
-1. **L'accès à votre instance n8n** (`auto.lielu.eu`) — c'est-à-dire pouvoir
+1. **L'accès à votre instance n8n** (`n8n.example.com`) — c'est-à-dire pouvoir
    vous connecter à son interface web avec un compte administrateur. Si vous
    ne l'avez pas, c'est la personne qui a installé n8n (vous-même dans le
    passé, ou un prestataire) qui a créé ce compte.
@@ -47,8 +47,8 @@ Pour la seule app Android, les points 1 et 3 suffisent — pas besoin du VPS.
 ### Où trouver l'URL de mon instance n8n (`N8N_BASE_URL`)
 
 C'est l'adresse que vous tapez dans un navigateur pour ouvrir n8n — ici
-`https://auto.lielu.eu`. Ajoutez `/api/v1` au bout pour obtenir la valeur du
-`.env` : `https://auto.lielu.eu/api/v1`.
+`https://n8n.example.com`. Ajoutez `/api/v1` au bout pour obtenir la valeur du
+`.env` : `https://n8n.example.com/api/v1`.
 
 ### Comment me connecter au serveur pour lancer les commandes (`npm run dev:server`, etc.)
 
@@ -63,7 +63,7 @@ qui gère le serveur de lancer `npm run build:server && npm start` (dans
 
 ### Où récupérer la clé API n8n, étape par étape
 
-1. Ouvrez `https://auto.lielu.eu` et connectez-vous.
+1. Ouvrez `https://n8n.example.com` et connectez-vous.
 2. Cliquez sur votre avatar/nom en bas à gauche → **Settings** (ou l'icône
    d'engrenage selon la version).
 3. Menu **n8n API** dans la colonne de gauche des réglages.
@@ -113,7 +113,7 @@ première ouverture, l'écran **Réglages** demande :
 
 | Champ | Valeur attendue |
 |---|---|
-| URL de l'API n8n | `https://auto.lielu.eu/api/v1` (votre instance n8n + `/api/v1`). |
+| URL de l'API n8n | `https://n8n.example.com/api/v1` (votre instance n8n + `/api/v1`). |
 | Clé API n8n | Voir "Où récupérer la clé API n8n" ci-dessus. |
 | PIN | Verrouille l'app sur cet appareil (l'écran d'accueil). Les données restent chiffrées par le système Android indépendamment de ce PIN. |
 
@@ -131,7 +131,7 @@ Copier `server/.env.example` en `server/.env` et remplir :
 
 | Variable | Description | Où la trouver / comment la générer |
 |---|---|---|
-| `N8N_BASE_URL` | URL de l'API REST n8n (ex. `https://auto.lielu.eu/api/v1`) | C'est l'URL de votre instance n8n suivie de `/api/v1`. |
+| `N8N_BASE_URL` | URL de l'API REST n8n (ex. `https://n8n.example.com/api/v1`) | C'est l'URL de votre instance n8n suivie de `/api/v1`. |
 | `ALLOWED_ORIGIN` | Origine autorisée en CORS (l'URL où la PWA est servie) | Doit correspondre exactement à l'URL publique de `app/` (schéma + domaine, sans slash final). |
 | `PORT` | Port d'écoute du backend | Libre, `8787` par défaut. |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Clés Web Push | À générer **une seule fois** avec `npx web-push generate-vapid-keys` (package [`web-push`](https://www.npmjs.com/package/web-push)), puis à figer dans `.env` — ne pas les régénérer ensuite, cela invaliderait tous les abonnements déjà enregistrés. |
@@ -161,8 +161,8 @@ individuellement), en adaptant l'URL du node HTTP Request à votre backend.
 
 | Champ | Valeur attendue |
 |---|---|
-| URL du backend (proxy + push) | URL publique de `server/`, ex. `https://pwa-api.lielu.eu` (sans chemin). |
-| URL du proxy API n8n | URL backend + route de proxy, ex. `https://pwa-api.lielu.eu/api/n8n`. |
+| URL du backend (proxy + push) | URL publique de `server/`, ex. `https://pwa-api.example.com` (sans chemin). |
+| URL du proxy API n8n | URL backend + route de proxy, ex. `https://pwa-api.example.com/api/n8n`. |
 | Clé API n8n | La clé générée à l'étape 2. |
 | PIN de déverrouillage | Un code local (4 chiffres minimum) qui **chiffre** ces informations sur l'appareil (PBKDF2 + AES-GCM, jamais transmis ni stocké tel quel — cf. `docs/ARCHITECTURE.md#sécurité-du-stockage-local`). En cas d'oubli, il n'y a pas de récupération : il faut réinitialiser via "Supprimer la configuration de cet appareil" et tout ressaisir. |
 

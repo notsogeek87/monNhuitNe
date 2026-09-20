@@ -10,10 +10,10 @@ processus, chacun avec sa propre façon de parler à n8n :
 ## Android natif (`android/`)
 
 ```
-┌─────────────────────────┐        HTTPS (direct)        ┌──────────────┐
-│  App Android (Kotlin/    │ ─────────────────────────────▶│  n8n API      │
-│  Compose), OkHttp         │  /api/v1/*                    │  auto.lielu.eu│
-└─────────────────────────┘ ◀─────────────────────────────  └──────────────┘
+┌─────────────────────────┐        HTTPS (direct)        ┌────────────────────┐
+│  App Android (Kotlin/    │ ─────────────────────────────▶│  n8n API            │
+│  Compose), OkHttp         │  /api/v1/*                    │  n8n.example.com    │
+└─────────────────────────┘ ◀─────────────────────────────  └────────────────────┘
         ▲
         │ notification FCM (topic "workflow-failures")
         │
@@ -31,7 +31,7 @@ Pourquoi c'est plus simple que la PWA :
   aucun DOM et n'exécute aucune politique de même origine — il fait de
   simples requêtes serveur-à-serveur, comme le ferait `curl`. Résultat :
   aucun backend proxy n'est nécessaire, l'app appelle
-  `https://auto.lielu.eu/api/v1/...` directement avec l'en-tête
+  `https://n8n.example.com/api/v1/...` directement avec l'en-tête
   `X-N8N-API-KEY`.
 - **Pas de calcul serveur pour la santé globale.** La fonction
   `computeHealthSummary` (portée de `server/src/healthPoll.ts` vers
@@ -57,13 +57,13 @@ Pourquoi c'est plus simple que la PWA :
 ### Vue d'ensemble
 
 ```
-┌─────────────────────────┐        HTTPS        ┌──────────────────────────┐        HTTPS        ┌──────────────┐
-│   PWA (SvelteKit SPA)   │ ───────────────────▶ │  Backend minimal          │ ───────────────────▶ │  n8n API      │
-│   app/                  │  /api/n8n/*          │  (Fastify)                │  /api/v1/*           │  (VPS existant│
-│   iOS Safari / Android  │  /hooks/*            │  server/                  │                      │   auto.lielu.eu)│
-│   Chrome, installée     │  /push/*             │  - proxy CORS             │                      │              │
-│   en PWA                │  /health/summary     │  - VAPID / web-push       │                      │              │
-└─────────────────────────┘ ◀─────────────────── │  - poller santé/échecs    │                      └──────────────┘
+┌─────────────────────────┐        HTTPS        ┌──────────────────────────┐        HTTPS        ┌────────────────────┐
+│   PWA (SvelteKit SPA)   │ ───────────────────▶ │  Backend minimal          │ ───────────────────▶ │  n8n API            │
+│   app/                  │  /api/n8n/*          │  (Fastify)                │  /api/v1/*           │  (VPS existant,     │
+│   iOS Safari / Android  │  /hooks/*            │  server/                  │                      │   n8n.example.com)  │
+│   Chrome, installée     │  /push/*             │  - proxy CORS             │                      │                     │
+│   en PWA                │  /health/summary     │  - VAPID / web-push       │                      │                     │
+└─────────────────────────┘ ◀─────────────────── │  - poller santé/échecs    │                      └────────────────────┘
         ▲   push               Web Push (VAPID)   └──────────────────────────┘
         │                                                    ▲
         └──── Service Worker ───────────────────────────────┘
@@ -110,10 +110,10 @@ corrompues silencieusement.
 ### Déploiement suggéré
 
 - `app/` : build statique (`npm run build --workspace app`) servi par le reverse
-  proxy existant sous un sous-domaine dédié (ex. `monnhuitne.lielu.eu`), HTTPS
+  proxy existant sous un sous-domaine dédié (ex. `monnhuitne.example.com`), HTTPS
   obligatoire pour l'installabilité PWA et le Web Push.
 - `server/` : process Node long-lived (`pm2`/`systemd`) sur le même VPS, exposé
-  sous un autre sous-domaine (ex. `pwa-api.lielu.eu`), CORS restreint à l'origine
+  sous un autre sous-domaine (ex. `pwa-api.example.com`), CORS restreint à l'origine
   de la PWA.
 - Un **Error Workflow** n8n (voir `server/n8n-error-workflow.example.json`) assigné
   par défaut à tous les workflows de prod, qui POST vers `/hooks/n8n-error` dès

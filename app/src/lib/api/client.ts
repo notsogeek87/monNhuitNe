@@ -2,7 +2,7 @@
 // ne lit jamais un store Svelte directement. Testable en isolation avec msw.
 
 export interface N8nClientConfig {
-	/** URL du proxy backend, ex: https://pwa-api.lielu.eu/api/n8n (pas l'API n8n directement, cf CORS). */
+	/** URL du proxy backend, ex: https://pwa-api.example.com/api/n8n (pas l'API n8n directement, cf CORS). */
 	proxyBaseUrl: string;
 	apiKey: string;
 }
