@@ -8,6 +8,7 @@ PWA de supervision et pilotage des workflows n8n (auto.lielu.eu) depuis mobile
 ```
 app/      SvelteKit (adapter-static, SPA) — l'application installable
 server/   Backend minimal (Fastify) — proxy CORS vers l'API n8n + Web Push
+android/  Projet Capacitor natif — génère l'APK Android
 docs/     Architecture détaillée et plan de notifications Android/iOS
 ```
 
@@ -36,4 +37,20 @@ l'appareil, cf `docs/ARCHITECTURE.md`).
 
 ```bash
 npm run test:app
+```
+
+## APK Android
+
+Le workflow GitHub Actions [`.github/workflows/android.yml`](.github/workflows/android.yml)
+build automatiquement l'APK à chaque push sur `main`/`staging`, chaque pull
+request et manuellement via `workflow_dispatch` :
+
+- `main` → release GitHub permanente et versionnée (`v1.0.<run_number>`).
+- autres branches / PR → release "debug-\<branche\>", remplacée à chaque run.
+
+Pour builder localement :
+
+```bash
+npm run cap:sync   # build de app/ + synchronisation dans android/
+cd android && ./gradlew assembleDebug
 ```
