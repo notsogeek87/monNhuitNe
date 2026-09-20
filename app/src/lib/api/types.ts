@@ -59,11 +59,3 @@ export interface HealthSummary {
 	staleWorkflows: { id: string; name: string; lastRunAt: string | null; daysSinceLastRun: number }[];
 	generatedAt: string;
 }
-
-// Paramètres d'entrée détectés pour un déclenchement manuel (webhook ou node "Execute Workflow Trigger").
-export interface TriggerInputField {
-	key: string;
-	label: string;
-	type: 'string' | 'number' | 'boolean';
-	required: boolean;
-}

@@ -58,13 +58,6 @@ data class ExecutionErrorSummary(
     val timestamp: String
 )
 
-data class TriggerInputField(
-    val key: String,
-    val label: String,
-    val type: String,
-    val required: Boolean = true
-)
-
 data class StaleWorkflowInfo(
     val id: String,
     val name: String,

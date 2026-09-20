@@ -4,22 +4,22 @@
 	import ErrorLog from '../../../lib/components/ErrorLog.svelte';
 	import ExecutionList from '../../../lib/components/ExecutionList.svelte';
 	import StatusBadge from '../../../lib/components/StatusBadge.svelte';
-	import TriggerForm from '../../../lib/components/TriggerForm.svelte';
-	import { detectTriggerInputs, getWorkflow, triggerWorkflow } from '../../../lib/api/workflows';
+	import { findWebhookPath, getWorkflow, triggerWorkflow } from '../../../lib/api/workflows';
 	import { getExecutionErrorSummary, listExecutions } from '../../../lib/api/executions';
-	import type { ExecutionErrorSummary, N8nExecution, N8nWorkflow, TriggerInputField } from '../../../lib/api/types';
+	import type { ExecutionErrorSummary, N8nExecution, N8nWorkflow } from '../../../lib/api/types';
 	import { n8nConfig } from '../../../lib/stores/session';
 
 	$: workflowId = $page.params.id ?? '';
 
 	let workflow: N8nWorkflow | null = null;
 	let executions: N8nExecution[] = [];
-	let triggerFields: TriggerInputField[] = [];
 	let selectedError: ExecutionErrorSummary | undefined;
 	let loading = true;
 	let error: string | null = null;
 	let triggering = false;
 	let triggerFeedback: string | null = null;
+
+	$: webhookPath = workflow ? findWebhookPath(workflow) : null;
 
 	async function load() {
 		const config = $n8nConfig;
@@ -29,7 +29,6 @@
 		try {
 			workflow = await getWorkflow(config, workflowId);
 			executions = await listExecutions(config, { workflowId, limit: 20 });
-			triggerFields = detectTriggerInputs(workflow);
 		} catch (err) {
 			error = (err as Error).message;
 		} finally {
@@ -48,23 +47,13 @@
 		selectedError = await getExecutionErrorSummary(config, execution.id);
 	}
 
-	function findWebhookPath(): string | null {
-		const webhookNode = workflow?.nodes?.find((n) => n.type.includes('webhook'));
-		return (webhookNode?.parameters?.path as string) ?? null;
-	}
-
-	async function handleTrigger(payload: Record<string, unknown>) {
+	async function handleTrigger() {
 		const config = $n8nConfig;
-		if (!config || !workflow) return;
+		if (!config || !webhookPath) return;
 		triggering = true;
 		triggerFeedback = null;
 		try {
-			const webhookPath = findWebhookPath();
-			if (webhookPath) {
-				await triggerWorkflow(config, workflow.id, { mode: 'webhook', webhookPath, payload });
-			} else {
-				await triggerWorkflow(config, workflow.id, { mode: 'execute', payload });
-			}
+			await triggerWorkflow(config, webhookPath, {});
 			triggerFeedback = 'Déclenché. Rafraîchissement des exécutions…';
 			await load();
 		} catch (err) {
@@ -88,7 +77,18 @@
 
 	<section>
 		<h2>Déclencher</h2>
-		<TriggerForm fields={triggerFields} submitting={triggering} onSubmit={handleTrigger} />
+		{#if webhookPath}
+			<button class="btn" disabled={triggering} on:click={handleTrigger}>
+				{triggering ? 'Déclenchement…' : 'Déclencher ce workflow'}
+			</button>
+		{:else}
+			<p class="muted">
+				Ce workflow n'a pas de node Webhook : l'API n8n ne permet pas de le
+				déclencher à la demande depuis l'app (seul un webhook peut être appelé de
+				l'extérieur). Il se lance autrement — planification, un autre service, un
+				autre workflow...
+			</p>
+		{/if}
 		{#if triggerFeedback}<p class="muted">{triggerFeedback}</p>{/if}
 	</section>
 
