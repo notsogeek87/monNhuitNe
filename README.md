@@ -1,15 +1,22 @@
 # monNhuitNe
 
-PWA de supervision et pilotage des workflows n8n (auto.lielu.eu) depuis mobile
-(Android + iOS/Safari), sans passer par l'interface web n8n complète.
+Supervision et pilotage des workflows n8n (auto.lielu.eu) depuis mobile, sans
+passer par l'interface web n8n complète. Deux clients indépendants, à choisir
+selon la plateforme :
+
+- **App Android native** (`android/`, Kotlin/Compose) — appelle l'API n8n
+  **directement**, sans serveur intermédiaire. Recommandé sur Android.
+- **PWA** (`app/` + `server/`) — pour navigateur ou iOS/Safari, où un backend
+  (`server/`) est nécessaire pour contourner CORS (voir
+  `docs/ARCHITECTURE.md`).
 
 ## Structure
 
 ```
-app/      SvelteKit (adapter-static, SPA) — l'application installable
-server/   Backend minimal (Fastify) — proxy CORS vers l'API n8n + Web Push
-android/  Projet Capacitor natif — génère l'APK Android
-docs/     Architecture détaillée et plan de notifications Android/iOS
+app/      SvelteKit (adapter-static, SPA) — la PWA, pour navigateur/iOS
+server/   Backend minimal (Fastify) — proxy CORS vers l'API n8n + Web Push, utilisé UNIQUEMENT par la PWA
+android/  Projet Android natif (Kotlin/Compose) — génère l'APK, appelle n8n directement
+docs/     Architecture détaillée et plan de notifications par plateforme
 ```
 
 Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) pour le détail des choix
@@ -27,17 +34,15 @@ pour chaque type d'information demandée plus bas.
    vous connecter à son interface web avec un compte administrateur. Si vous
    ne l'avez pas, c'est la personne qui a installé n8n (vous-même dans le
    passé, ou un prestataire) qui a créé ce compte.
-2. **L'accès au serveur (VPS)** où tourne n8n — un terminal (SSH) ou le
-   panneau de contrôle de votre hébergeur (OVH, Hetzner, Scaleway...). C'est
-   là que le backend (`server/`) doit être lancé en permanence, à côté de
-   n8n. Sans cet accès, seule la partie "développement en local sur votre
-   ordinateur" (section Démarrage) est possible.
+2. **L'accès au serveur (VPS)** où tourne n8n — **uniquement si vous comptez
+   utiliser la PWA** (`app/`+`server/`). L'app Android native n'en a pas
+   besoin, elle appelle n8n directement. Si besoin : un terminal (SSH) ou le
+   panneau de contrôle de votre hébergeur (OVH, Hetzner, Scaleway...), pour y
+   faire tourner le backend (`server/`) en permanence, à côté de n8n.
 3. **Un compte GitHub** avec accès à ce dépôt — pour déclencher/consulter les
    builds d'APK (section APK Android) et modifier le code.
 
-Si vous n'avez **aucun** de ces trois accès, ce projet ne peut pas encore être
-mis en service : il faut d'abord les obtenir (ou identifier qui les détient)
-avant de continuer.
+Pour la seule app Android, les points 1 et 3 suffisent — pas besoin du VPS.
 
 ### Où trouver l'URL de mon instance n8n (`N8N_BASE_URL`)
 
@@ -99,7 +104,28 @@ et on complétera ce guide en conséquence.
 
 ## Configuration
 
-### 1. Backend (`server/.env`)
+### App Android native (`android/`)
+
+Rien à déployer côté serveur pour cette app : elle appelle l'API n8n
+directement depuis le téléphone (une app native n'est pas soumise à CORS,
+contrairement à un navigateur/PWA — voir `docs/ARCHITECTURE.md`). À la
+première ouverture, l'écran **Réglages** demande :
+
+| Champ | Valeur attendue |
+|---|---|
+| URL de l'API n8n | `https://auto.lielu.eu/api/v1` (votre instance n8n + `/api/v1`). |
+| Clé API n8n | Voir "Où récupérer la clé API n8n" ci-dessus. |
+| PIN | Verrouille l'app sur cet appareil (l'écran d'accueil). Les données restent chiffrées par le système Android indépendamment de ce PIN. |
+
+Pour les notifications push (Firebase Cloud Messaging), voir la checklist
+dans [`docs/NOTIFICATIONS.md`](docs/NOTIFICATIONS.md#android-natif-firebase-cloud-messaging).
+C'est optionnel : l'app fonctionne sans, seulement sans alerte en arrière-plan.
+
+### PWA (`app/` + `server/`)
+
+Pour un usage en navigateur ou sur iOS/Safari, où le backend `server/` reste nécessaire.
+
+#### 1. Backend (`server/.env`)
 
 Copier `server/.env.example` en `server/.env` et remplir :
 
@@ -114,7 +140,7 @@ Copier `server/.env.example` en `server/.env` et remplir :
 | `STALE_WORKFLOW_DAYS` | Seuil d'inactivité "workflow figé" | En jours, `7` par défaut. |
 | `SUBSCRIPTIONS_FILE` | Chemin du fichier JSON des abonnements push | Chemin local, le dossier doit exister/être accessible en écriture. |
 
-### 2. Clé API n8n
+#### 2. Clé API n8n
 
 Générée depuis n8n : **Réglages → n8n API** (ou `/settings/api` dans l'UI n8n),
 bouton "Create an API key". Voir la
@@ -122,7 +148,7 @@ bouton "Create an API key". Voir la
 Cette clé n'est **jamais stockée côté backend** : elle est saisie une fois dans
 l'app (écran Réglages) et chiffrée localement sur l'appareil (cf. `docs/ARCHITECTURE.md`).
 
-### 3. Notifications (Web Push + Error Workflow n8n)
+#### 3. Notifications (Web Push + Error Workflow n8n)
 
 Voir la checklist complète dans [`docs/NOTIFICATIONS.md`](docs/NOTIFICATIONS.md#checklist-de-mise-en-service) :
 générer les clés VAPID (étape 1 ci-dessus), importer
@@ -131,7 +157,7 @@ générer les clés VAPID (étape 1 ci-dessus), importer
 (`Settings → Workflows → Error Workflow` dans l'UI n8n, ou par workflow
 individuellement), en adaptant l'URL du node HTTP Request à votre backend.
 
-### 4. Application (écran **Réglages**, à la première ouverture)
+#### 4. Application (écran **Réglages**, à la première ouverture)
 
 | Champ | Valeur attendue |
 |---|---|
@@ -147,7 +173,7 @@ d'accueil" — voir le
 et seulement à partir d'iOS 16.4 ; le bouton reste sinon désactivé avec un
 message explicatif (détails dans `docs/NOTIFICATIONS.md`).
 
-### 5. Déploiement (HTTPS obligatoire)
+#### 5. Déploiement (HTTPS obligatoire)
 
 La PWA (installabilité + Web Push) et le backend (CORS) exigent tous les deux
 d'être servis en HTTPS. Suggestion : passer chacun derrière le reverse proxy
@@ -157,7 +183,7 @@ automatique via Let's Encrypt) ou
 [nginx](https://nginx.org/en/docs/http/ngx_http_proxy_module.html). Détails
 des sous-domaines suggérés dans `docs/ARCHITECTURE.md#déploiement-suggéré`.
 
-## Démarrage
+## Démarrage (PWA)
 
 ```bash
 npm install
@@ -168,6 +194,8 @@ npm run dev:server
 # Frontend (dans un autre terminal)
 npm run dev:app
 ```
+
+Pour l'app Android, pas d'étape npm : voir "APK Android" plus bas.
 
 ## Tests
 
@@ -193,16 +221,17 @@ Aucun secret GitHub à configurer : le workflow utilise uniquement le
 L'APK est signé avec la **clé de debug** committée dans le dépôt (pas de clé
 de production) — suffisant pour une installation manuelle ("sources
 inconnues") ou une distribution à des testeurs internes, mais **pas** pour le
-Play Store. Le jour où c'est nécessaire, voir le guide officiel Capacitor sur
-la [signature et le déploiement Android vers le Play Store](https://capacitorjs.com/docs/android/deploying-to-google-play)
-(génération d'un keystore, configuration de `android/app/build.gradle`, puis
-ajout du keystore et de son mot de passe comme
+Play Store. Le jour où c'est nécessaire, voir le guide officiel Android sur la
+[signature d'une app pour la publication](https://developer.android.com/studio/publish/app-signing)
+(génération d'un keystore de production, configuration de `signingConfigs`
+dans `android/app/build.gradle`, puis ajout du keystore et de son mot de
+passe comme
 [secrets GitHub](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
 pour signer en CI).
 
-Pour builder localement :
+Pour builder localement (aucune dépendance Node requise, c'est un projet
+Gradle/Kotlin autonome) :
 
 ```bash
-npm run cap:sync   # build de app/ + synchronisation dans android/
 cd android && ./gradlew assembleDebug
 ```

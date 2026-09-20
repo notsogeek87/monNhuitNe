@@ -1,8 +1,0 @@
-{
-  "appId": "com.monnhuitne.app",
-  "appName": "monNhuitNe",
-  "webDir": "app/build",
-  "server": {
-    "androidScheme": "https"
-  }
-}

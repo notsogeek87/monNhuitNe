@@ -15,19 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
 
-      - run: npm ci --no-audit --no-fund --loglevel=error
-
-      - run: npm run cap:sync
+      # Optionnel : voir docs/NOTIFICATIONS.md pour créer ce secret une fois
+      # le projet Firebase configuré. Sans lui, le build réussit quand même
+      # (app/build.gradle saute le plugin google-services si le fichier est
+      # absent) — seules les notifications push ne fonctionneront pas.
+      - name: Config Firebase (si le secret existe)
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
       # versionCode/versionName ne sont plus figés dans build.gradle : ce run
       # de CI leur donne une valeur unique et strictement croissante (run_number),
