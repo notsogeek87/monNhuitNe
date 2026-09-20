@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { detectTriggerInputs, listWorkflows, triggerWorkflow } from './workflows';
+import { findWebhookPath, listWorkflows, triggerWorkflow } from './workflows';
 import type { N8nWorkflow } from './types';
 
 const config = { proxyBaseUrl: 'https://backend.test/api/n8n', apiKey: 'test-key' };
@@ -27,24 +27,11 @@ describe('listWorkflows', () => {
 });
 
 describe('triggerWorkflow', () => {
-	it('appelle /workflows/:id/execute en mode execute', async () => {
-		const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse({ executionId: 'exec-1' }));
-		vi.stubGlobal('fetch', fetchMock);
-
-		const result = await triggerWorkflow(config, 'wf-1', { mode: 'execute', payload: { foo: 'bar' } });
-
-		expect(result.executionId).toBe('exec-1');
-		expect(fetchMock).toHaveBeenCalledWith(
-			'https://backend.test/api/n8n/workflows/wf-1/execute',
-			expect.objectContaining({ method: 'POST' })
-		);
-	});
-
-	it('appelle le webhook proxifié en mode webhook', async () => {
+	it('appelle le webhook proxifié', async () => {
 		const fetchMock = vi.fn().mockResolvedValueOnce(new Response(null, { status: 200 }));
 		vi.stubGlobal('fetch', fetchMock);
 
-		await triggerWorkflow(config, 'wf-1', { mode: 'webhook', webhookPath: 'my-hook', payload: {} });
+		await triggerWorkflow(config, 'my-hook', {});
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			'https://backend.test/hooks/my-hook',
@@ -53,8 +40,8 @@ describe('triggerWorkflow', () => {
 	});
 });
 
-describe('detectTriggerInputs', () => {
-	it('extrait les champs déclarés sur un Execute Workflow Trigger', () => {
+describe('findWebhookPath', () => {
+	it('trouve le chemin déclaré sur un node Webhook', () => {
 		const workflow: N8nWorkflow = {
 			id: 'wf-1',
 			name: 'Test',
@@ -64,21 +51,19 @@ describe('detectTriggerInputs', () => {
 			nodes: [
 				{
 					id: 'n1',
-					name: 'Trigger',
-					type: 'n8n-nodes-base.executeWorkflowTrigger',
-					parameters: { workflowInputs: { values: [{ name: 'email', type: 'string' }] } }
+					name: 'Webhook',
+					type: 'n8n-nodes-base.webhook',
+					parameters: { path: 'my-hook' }
 				}
 			]
 		};
 
-		expect(detectTriggerInputs(workflow)).toEqual([
-			{ key: 'email', label: 'email', type: 'string', required: true }
-		]);
+		expect(findWebhookPath(workflow)).toBe('my-hook');
 	});
 
-	it('renvoie un tableau vide si aucun trigger reconnu', () => {
+	it("renvoie null si le workflow n'a pas de node Webhook", () => {
 		const workflow: N8nWorkflow = { id: 'wf-1', name: 'Test', active: true, createdAt: '', updatedAt: '' };
-		expect(detectTriggerInputs(workflow)).toEqual([]);
+		expect(findWebhookPath(workflow)).toBeNull();
 	});
 });
 

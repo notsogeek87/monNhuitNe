@@ -26,7 +26,6 @@ import com.monnhuitne.app.data.ExecutionErrorSummary
 import com.monnhuitne.app.data.N8nApi
 import com.monnhuitne.app.data.N8nExecution
 import com.monnhuitne.app.data.N8nWorkflow
-import com.monnhuitne.app.data.detectTriggerInputs
 import com.monnhuitne.app.data.findWebhookPath
 import com.monnhuitne.app.ui.components.StatusBadge
 import com.monnhuitne.app.ui.theme.ErrorColor
@@ -75,37 +74,35 @@ fun WorkflowDetailScreen(api: N8nApi, workflowId: String, onBack: () -> Unit) {
                 StatusBadge(status = if (wf.active) "success" else "inactive")
 
                 Text("Déclencher", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 20.dp))
-                Button(
-                    enabled = !triggering,
-                    onClick = {
-                        scope.launch {
-                            triggering = true
-                            triggerFeedback = null
-                            try {
-                                val webhookPath = findWebhookPath(wf)
-                                val payload = emptyMap<String, String>()
-                                if (webhookPath != null) {
-                                    api.triggerWebhook(webhookPath, payload)
-                                } else {
-                                    api.triggerExecute(wf.id, payload)
+                val webhookPath = findWebhookPath(wf)
+                if (webhookPath != null) {
+                    Button(
+                        enabled = !triggering,
+                        onClick = {
+                            scope.launch {
+                                triggering = true
+                                triggerFeedback = null
+                                try {
+                                    api.triggerWebhook(webhookPath, emptyMap())
+                                    triggerFeedback = "Déclenché. Rafraîchissement…"
+                                    load()
+                                } catch (err: Exception) {
+                                    triggerFeedback = "Échec du déclenchement : ${err.message}"
+                                } finally {
+                                    triggering = false
                                 }
-                                triggerFeedback = "Déclenché. Rafraîchissement…"
-                                load()
-                            } catch (err: Exception) {
-                                triggerFeedback = "Échec du déclenchement : ${err.message}"
-                            } finally {
-                                triggering = false
                             }
-                        }
-                    },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text(if (triggering) "Déclenchement…" else "Déclencher ce workflow")
-                }
-                if (detectTriggerInputs(wf).isNotEmpty()) {
+                        },
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        Text(if (triggering) "Déclenchement…" else "Déclencher ce workflow")
+                    }
+                } else {
                     Text(
-                        "Ce workflow attend des paramètres d'entrée — non pris en charge pour l'instant, " +
-                            "il sera déclenché sans payload.",
+                        "Ce workflow n'a pas de node Webhook : l'API n8n ne permet pas de le " +
+                            "déclencher à la demande depuis l'app (seul un webhook peut être appelé " +
+                            "de l'extérieur). Il se lance autrement — planification, un autre " +
+                            "service, un autre workflow...",
                         style = MaterialTheme.typography.bodySmall,
                         color = TextMuted,
                         modifier = Modifier.padding(top = 4.dp)

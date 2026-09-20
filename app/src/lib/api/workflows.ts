@@ -1,5 +1,5 @@
 import { n8nRequest, type N8nClientConfig } from './client';
-import type { N8nWorkflow, N8nWorkflowListResponse, TriggerInputField } from './types';
+import type { N8nWorkflow, N8nWorkflowListResponse } from './types';
 
 export async function listWorkflows(config: N8nClientConfig): Promise<N8nWorkflow[]> {
 	const all: N8nWorkflow[] = [];
@@ -23,55 +23,30 @@ export async function getWorkflow(config: N8nClientConfig, id: string): Promise<
 }
 
 /**
- * Déclenche un workflow. Deux modes selon comment le workflow démarre :
- * - `webhook`: POST direct sur l'URL de webhook production du workflow.
- * - `execute`: API n8n POST /workflows/{id}/execute avec un payload d'entrée
- *   (nécessite que le workflow soit conçu pour recevoir des données, ex un
- *   "Execute Workflow Trigger" ou un premier node "Set").
+ * Déclenche un workflow via son webhook de production. L'API REST publique de
+ * n8n (`/api/v1/...`) est volontairement limitée à la gestion des workflows
+ * (lister, activer/désactiver...) : elle n'expose aucune route générique pour
+ * lancer une exécution à la demande (`POST /workflows/{id}/execute` n'existe
+ * pas et répond 405). Le seul déclenchement externe possible est donc un
+ * webhook — voir `findWebhookPath`, qui doit renvoyer un chemin non nul avant
+ * d'appeler cette fonction.
  */
 export async function triggerWorkflow(
 	config: N8nClientConfig,
-	workflowId: string,
-	options: { mode: 'webhook'; webhookPath: string; payload: Record<string, unknown> } | {
-		mode: 'execute';
-		payload: Record<string, unknown>;
-	}
-): Promise<{ executionId?: string }> {
-	if (options.mode === 'webhook') {
-		// Le webhook n'est pas sous /api/v1, il est proxifié séparément (cf server/src/proxy.ts, route /hooks).
-		const res = await fetch(`${config.proxyBaseUrl.replace('/api/n8n', '')}/hooks/${options.webhookPath}`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(options.payload)
-		});
-		if (!res.ok) throw new Error(`Déclenchement webhook échoué (${res.status})`);
-		return {};
-	}
-
-	const result = await n8nRequest<{ executionId?: string }>(config, `/workflows/${workflowId}/execute`, {
+	webhookPath: string,
+	payload: Record<string, unknown>
+): Promise<void> {
+	// Le webhook n'est pas sous /api/v1, il est proxifié séparément (cf server/src/proxy.ts, route /hooks).
+	const res = await fetch(`${config.proxyBaseUrl.replace('/api/n8n', '')}/hooks/${webhookPath}`, {
 		method: 'POST',
-		body: JSON.stringify(options.payload)
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload)
 	});
-	return result;
+	if (!res.ok) throw new Error(`Déclenchement webhook échoué (${res.status})`);
 }
 
-/**
- * Détecte grossièrement les champs d'entrée attendus par un workflow en inspectant
- * son premier node déclencheur. Heuristique MVP : suffisant pour les workflows
- * "Execute Workflow Trigger" avec un schéma JSON simple déclaré en paramètres.
- */
-export function detectTriggerInputs(workflow: N8nWorkflow): TriggerInputField[] {
-	const triggerNode = workflow.nodes?.find((n) => n.type.includes('executeWorkflowTrigger'));
-	const schema = triggerNode?.parameters?.workflowInputs as
-		| { values?: { name: string; type?: string }[] }
-		| undefined;
-
-	if (!schema?.values) return [];
-
-	return schema.values.map((field) => ({
-		key: field.name,
-		label: field.name,
-		type: (field.type as TriggerInputField['type']) ?? 'string',
-		required: true
-	}));
+/** Cherche un node Webhook pour savoir si ce workflow peut être déclenché depuis l'app. */
+export function findWebhookPath(workflow: N8nWorkflow): string | null {
+	const webhookNode = workflow.nodes?.find((n) => n.type.includes('webhook'));
+	return (webhookNode?.parameters?.path as string) ?? null;
 }
