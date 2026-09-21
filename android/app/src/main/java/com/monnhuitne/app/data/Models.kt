@@ -15,13 +15,20 @@ data class N8nWorkflowNode(
 )
 
 @Serializable
+data class N8nWorkflowTag(
+    val id: String = "",
+    val name: String = ""
+)
+
+@Serializable
 data class N8nWorkflow(
     val id: String,
     val name: String,
     val active: Boolean = false,
     val updatedAt: String = "",
     val createdAt: String = "",
-    val nodes: List<N8nWorkflowNode> = emptyList()
+    val nodes: List<N8nWorkflowNode> = emptyList(),
+    val tags: List<N8nWorkflowTag> = emptyList()
 )
 
 @Serializable

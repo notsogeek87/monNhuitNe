@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 
 // Même palette que la PWA (app/src/app.css) pour une identité visuelle cohérente.
 val Background = Color(0xFF0B0E14)
+val SurfaceElevated = Color(0xFF12161F)
 val SurfaceCard = Color(0xFF161B26)
 val Border = Color(0xFF232938)
 val TextPrimary = Color(0xFFE6E9F0)
