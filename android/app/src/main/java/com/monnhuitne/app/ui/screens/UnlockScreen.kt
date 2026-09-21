@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -28,6 +31,16 @@ import com.monnhuitne.app.ui.theme.ErrorColor
 fun UnlockScreen(store: SettingsStore, onUnlocked: () -> Unit, onReset: () -> Unit) {
     var pin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    fun tryUnlock() {
+        if (store.verifyPin(pin)) {
+            keyboardController?.hide()
+            onUnlocked()
+        } else {
+            error = "PIN incorrect."
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -42,14 +55,13 @@ fun UnlockScreen(store: SettingsStore, onUnlocked: () -> Unit, onReset: () -> Un
             onValueChange = { pin = it; error = null },
             label = { Text("PIN") },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { tryUnlock() }),
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         )
         error?.let { Text(it, color = ErrorColor) }
         Button(
-            onClick = {
-                if (store.verifyPin(pin)) onUnlocked() else error = "PIN incorrect."
-            },
+            onClick = { tryUnlock() },
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
         ) {
             Text("Déverrouiller")
