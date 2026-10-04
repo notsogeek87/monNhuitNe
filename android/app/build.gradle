@@ -3,6 +3,11 @@ apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'kotlinx-serialization'
 
+// Numéro de build strictement croissant : BUILD_NUMBER (CI = github.run_number) ou -PbuildNumber=N.
+// versionCode = N ; versionName = <appVersionBase>.N (ex. 1.0.152) ; le tag de release est v<versionName>.
+def buildNumber = (System.getenv('BUILD_NUMBER') ?: project.findProperty('buildNumber'))?.toString()?.toInteger() ?: 1
+def appVersionBase = project.property('appVersionBase')
+
 android {
     namespace = "com.monnhuitne.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -11,10 +16,8 @@ android {
         applicationId "com.monnhuitne.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Surchargeable en CI via -PmonnhuitneVersionCode=N -PmonnhuitneVersionName=X.Y.N
-        // pour que chaque release GitHub porte une version unique et croissante.
-        versionCode project.hasProperty('monnhuitneVersionCode') ? (monnhuitneVersionCode as int) : 1
-        versionName project.hasProperty('monnhuitneVersionName') ? monnhuitneVersionName : "1.0"
+        versionCode buildNumber
+        versionName "$appVersionBase.$buildNumber"
     }
 
     // Clé debug FIXE, committée dans le repo (android/app/debug.keystore).
@@ -66,12 +69,15 @@ dependencies {
     implementation "androidx.navigation:navigation-compose:$navigationComposeVersion"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion"
     implementation "androidx.core:core-ktx:$coreKtxVersion"
 
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinxCoroutinesVersion"
     implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
     implementation "androidx.security:security-crypto:$securityCryptoVersion"
+
+    implementation "com.lielu:lielugit-updater:1.0.0"
 
     implementation platform("com.google.firebase:firebase-bom:$firebaseBomVersion")
     implementation "com.google.firebase:firebase-messaging-ktx"

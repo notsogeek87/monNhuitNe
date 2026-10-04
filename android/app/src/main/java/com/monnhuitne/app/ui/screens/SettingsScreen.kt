@@ -26,6 +26,8 @@ import com.monnhuitne.app.data.N8nCredentials
 import com.monnhuitne.app.data.SettingsStore
 import com.monnhuitne.app.ui.theme.ErrorColor
 import com.monnhuitne.app.ui.theme.TextMuted
+import com.monnhuitne.app.ui.update.AppUpdateViewModel
+import com.monnhuitne.app.ui.update.UpdateSettingsSection
 
 @Composable
 fun SettingsScreen(
@@ -33,7 +35,8 @@ fun SettingsScreen(
     existing: N8nCredentials?,
     onSaved: (N8nCredentials) -> Unit,
     onLoggedOut: (() -> Unit)? = null,
-    onReset: (() -> Unit)? = null
+    onReset: (() -> Unit)? = null,
+    updateViewModel: AppUpdateViewModel? = null
 ) {
     var baseUrl by remember { mutableStateOf(existing?.baseUrl ?: "") }
     var apiKey by remember { mutableStateOf(existing?.apiKey ?: "") }
@@ -124,6 +127,10 @@ fun SettingsScreen(
             }
         }) {
             Text(if (existing == null) "Enregistrer" else "Mettre à jour")
+        }
+
+        if (existing != null && updateViewModel != null) {
+            UpdateSettingsSection(updateViewModel)
         }
 
         if (existing != null) {

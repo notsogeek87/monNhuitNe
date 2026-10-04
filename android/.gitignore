@@ -41,3 +41,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Dépôt Maven vendoré de lielugit-updater : doit rester versionné (sinon *.aar ci-dessus le masquerait).
+!libs/lielugit-maven/**/*.aar

@@ -17,6 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -29,6 +32,8 @@ import com.monnhuitne.app.ui.screens.SettingsScreen
 import com.monnhuitne.app.ui.screens.UnlockScreen
 import com.monnhuitne.app.ui.screens.WorkflowDetailScreen
 import com.monnhuitne.app.ui.screens.WorkflowsScreen
+import com.monnhuitne.app.ui.update.AppUpdateViewModel
+import com.monnhuitne.app.ui.update.UpdatePrompt
 
 private const val ROUTE_WORKFLOWS = "workflows"
 private const val ROUTE_HEALTH = "health"
@@ -40,6 +45,9 @@ fun MonNhuitNeApp() {
     val store = remember { SettingsStore(context) }
     var hasCredentials by remember { mutableStateOf(store.hasCredentials()) }
     var unlockedCreds by remember { mutableStateOf<N8nCredentials?>(null) }
+    val appContext = context.applicationContext
+    val updateViewModel: AppUpdateViewModel =
+        viewModel(factory = viewModelFactory { initializer { AppUpdateViewModel.create(appContext) } })
 
     when {
         !hasCredentials -> {
@@ -66,6 +74,7 @@ fun MonNhuitNeApp() {
             MainScaffold(
                 credentials = unlockedCreds!!,
                 store = store,
+                updateViewModel = updateViewModel,
                 onLock = { unlockedCreds = null },
                 onFullReset = {
                     store.clear()
@@ -134,6 +143,7 @@ private fun MainScaffold(
                 SettingsScreen(
                     store = store,
                     existing = credentials,
+                    updateViewModel = updateViewModel,
                     onSaved = {},
                     onLoggedOut = onLock,
                     onReset = onFullReset

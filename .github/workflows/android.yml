@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      # Lu par android/app/build.gradle : versionCode = run_number, versionName = <appVersionBase>.<run_number>.
+      BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v5
 
@@ -31,22 +33,19 @@ jobs:
         if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
         run: echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
-      # versionCode/versionName ne sont plus figés dans build.gradle : ce run
-      # de CI leur donne une valeur unique et strictement croissante (run_number),
-      # nécessaire pour que les vraies releases (voir plus bas) portent chacune
-      # une version distincte au lieu de rester bloquées en "1.0".
+      # versionCode/versionName viennent de BUILD_NUMBER (voir android/app/build.gradle) : chaque run
+      # a une version unique et strictement croissante, nécessaire à Android (versionCode) et à
+      # lielugit-updater (le tag v<version> doit être supérieur à la version installée).
       - name: Déterminer la version
         id: version
         run: |
-          echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
-          echo "name=1.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          BASE=$(grep '^appVersionBase=' android/gradle.properties | cut -d= -f2)
+          echo "code=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "name=$BASE.$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Build debug APK
         working-directory: android
-        run: |
-          ./gradlew assembleDebug --no-daemon -q \
-            -PmonnhuitneVersionCode=${{ steps.version.outputs.code }} \
-            -PmonnhuitneVersionName=${{ steps.version.outputs.name }}
+        run: ./gradlew assembleDebug --no-daemon -q
 
       # Gradle nomme toujours sa sortie "app-debug.apk" (nom fixe lié au
       # buildType), quelle que soit la version : on la renomme pour que le
@@ -78,10 +77,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ steps.version.outputs.name }}"
+          cat > release-notes.md <<EOF
+          ## monNhuitNe $TAG
+
+          Run #${{ github.run_number }} (${{ github.sha }}). Signé avec la clé debug (pas de clé de production configurée).
+
+          ### Installation
+
+          - **Déjà installée** : ouvrez l'app. Elle cherche une mise à jour à chaque ouverture et vous guide (Installer → autoriser l'installation d'applications inconnues si Android le demande → confirmer « Mettre à jour »). Vos données sont conservées. Vous pouvez aussi toucher « Rechercher une mise à jour » dans les Réglages.
+          - **Première installation (manuelle)** : téléchargez l'APK ci-dessous sur le téléphone, ouvrez-le, autorisez la source si Android la bloque, puis touchez « Installer ». Les mises à jour suivantes sont ensuite proposées dans l'app.
+          EOF
           gh release create "$TAG" \
             "${{ steps.apk.outputs.path }}" \
             --title "monNhuitNe $TAG" \
-            --notes "Run #${{ github.run_number }} (${{ github.sha }}). Signé avec la clé debug (pas de clé de production configurée)." \
+            --notes-file release-notes.md \
             --target "${{ github.sha }}"
 
       # Les artifacts d'Actions sont hébergés sur Azure Blob Storage, souvent
