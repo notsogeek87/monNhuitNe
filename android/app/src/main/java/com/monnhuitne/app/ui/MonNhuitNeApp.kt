@@ -84,12 +84,14 @@ fun MonNhuitNeApp() {
             )
         }
     }
+    UpdatePrompt(updateViewModel)
 }
 
 @Composable
 private fun MainScaffold(
     credentials: N8nCredentials,
     store: SettingsStore,
+    updateViewModel: AppUpdateViewModel,
     onLock: () -> Unit,
     onFullReset: () -> Unit
 ) {
